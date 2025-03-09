@@ -1,13 +1,19 @@
+// 下一个功能单元
 let nextUnitOfWork = null;
+
+// 根节点
+let wipRoot = null;
 
 function render(element, container) {
   // 根据 root 创建一个fiber
-  nextUnitOfWork = {
+  wipRoot = {
     dom: container,
     props: {
       children: [element],
     },
   };
+
+  nextUnitOfWork = wipRoot;
 }
 function createDom(fiber) {
   const dom =
@@ -25,15 +31,13 @@ function createDom(fiber) {
 }
 
 function performUnitOfWork(fiber) {
-  console.log("fiber:", fiber);
-
   if (!fiber.dom) {
     fiber.dom = createDom(fiber);
   }
 
-  if (fiber.parent) {
-    fiber.parent.dom.appendChild(fiber.dom);
-  }
+  // if (fiber.parent) {
+  //   fiber.parent.dom.appendChild(fiber.dom);
+  // }
 
   const elements = fiber.props.children;
   let index = 0;
@@ -73,6 +77,27 @@ function performUnitOfWork(fiber) {
   }
 }
 
+// 处理提交fiber树
+function commitWork(fiber) {
+  if (!fiber) {
+    return;
+  }
+  console.log("🐯", fiber);
+  const domParent = fiber.parent.dom;
+  console.log("🌧️:", domParent);
+
+  domParent.appendChild(fiber.dom);
+
+  commitWork(fiber.child);
+  commitWork(fiber.sibling);
+}
+
+// 提交任务，将 fiber tree 渲染为真实 DOM
+function commitRoot() {
+  commitWork(wipRoot.child);
+  wipRoot = null;
+}
+
 function workLoop(deadline) {
   // 停止标识
   let shouldYield = false;
@@ -82,6 +107,10 @@ function workLoop(deadline) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
     // 判断是否要停止
     shouldYield = deadline.timeRemaining() < 1;
+  }
+
+  if (!nextUnitOfWork && wipRoot) {
+    commitRoot();
   }
 
   requestIdleCallback(workLoop);
