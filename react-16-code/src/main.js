@@ -1,13 +1,20 @@
 import React from "lib/react";
 import ReactDOM from "lib/react-dom";
 
-const dom = (
-  <div className="red">
-    <span> Hello</span>
-    World
-  </div>
-);
-
 const container = document.getElementById("root");
 
-ReactDOM.render(dom, container);
+const updateValue = (e) => {
+  rerender(e.target.value);
+};
+
+const rerender = (value) => {
+  const element = (
+    <div>
+      <input onInput={updateValue} value={value} />
+      <h2>Hello {value}</h2>
+    </div>
+  );
+  ReactDOM.render(element, container);
+};
+
+rerender("World");
