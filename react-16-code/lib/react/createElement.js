@@ -15,6 +15,7 @@ function createTextElement(text) {
     type: 'TEXT_ELEMENT',
     props: {
       nodeValue: text,
+      children: [],
     },
   }
 }

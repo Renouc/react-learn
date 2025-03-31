@@ -3,6 +3,7 @@ import ReactDOM from 'lib/react-dom'
 
 const element = (
   <div>
+    这是div
     <h1>
       <span style="color: blue">hello</span>
       <span style="color: red">world</span>
