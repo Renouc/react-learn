@@ -1,13 +1,17 @@
 // 下一个待执行的 fiber
 let nextUnitOfWork = null;
 
+// 根节点
+let wipRoot = null;
+
 function render(element, container) {
-  nextUnitOfWork = {
+  wipRoot = {
     dom: container,
     props: {
       children: [element],
     },
   };
+  nextUnitOfWork = wipRoot;
 
   requestIdleCallback(workLoop);
 }
@@ -34,10 +38,10 @@ function performUnitOfWork(fiber) {
     fiber.dom = createDom(fiber);
   }
 
-  if (fiber.parent) {
-    fiber.parent.dom.appendChild(fiber.dom);
-    console.log("💐:", fiber);
-  }
+  // if (fiber.parent) {
+  //   fiber.parent.dom.appendChild(fiber.dom);
+  //   console.log("💐:", fiber);
+  // }
 
   let index = 0;
   let prevSibling = null;
@@ -81,9 +85,33 @@ function performUnitOfWork(fiber) {
   }
 }
 
+function commitWork(fiber) {
+  if (!fiber) {
+    return;
+  }
+  console.log("🍎", fiber);
+
+  if (fiber.parent) {
+    fiber.parent.dom.appendChild(fiber.dom);
+  }
+
+  commitWork(fiber.child);
+  commitWork(fiber.sibling);
+}
+
+function commitRoot() {
+  console.log("💐:", wipRoot);
+
+  commitWork(wipRoot.child);
+  wipRoot = null;
+}
+
 function workLoop(deadline) {
   while (nextUnitOfWork && deadline.timeRemaining() > 1) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+    if (!nextUnitOfWork && wipRoot) {
+      commitRoot();
+    }
   }
 
   requestIdleCallback(workLoop);
