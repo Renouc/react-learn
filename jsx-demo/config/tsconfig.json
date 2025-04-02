@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "module": "ES6",
+        "jsx": "react-jsx",
+        "outDir": "../dist", // 编译输出到项目根目录的dist文件夹
+        "rootDir": "../src", // 源代码位于项目根目录的src文件夹
+        "allowJs": true // 允许编译 js 文件
+    },
+    "include": ["../src/**/*"] // 只包含src目录下的文件
+}
