@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build": "babel src --out-dir dist --config-file ./config/babel.config.js",
+    "build2": "babel src --out-dir dist --config-file ./config/babel.config2.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.27.0",
+    "@babel/plugin-transform-react-jsx": "^7.25.9",
+    "@babel/preset-react": "^7.26.3"
+  }
+}
