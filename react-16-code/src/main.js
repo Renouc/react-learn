@@ -1,20 +1,29 @@
 import React from "lib/react";
 import ReactDOM from "lib/react-dom";
-
 const container = document.getElementById("root");
 
-const updateValue = (e) => {
-  rerender(e.target.value);
-};
+function updateInputValue(e) {
+  console.log(e.target.value);
+  renderer(e.target.value);
+}
 
-const rerender = (value) => {
+function Input({ value, onChange }) {
+  return (
+    <div>
+      <input value={value} type="text" onInput={onChange} />
+      <p>{value}</p>
+    </div>
+  );
+}
+
+function renderer(inputValue) {
   const element = (
     <div>
-      <input onInput={updateValue} value={value} />
-      <h2>Hello {value}</h2>
+      <h3 style="color: red">这是测试</h3>
+      <Input value={inputValue} onChange={updateInputValue} />
     </div>
   );
   ReactDOM.render(element, container);
-};
+}
 
-rerender("World");
+renderer("Hello");

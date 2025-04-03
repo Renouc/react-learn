@@ -35,12 +35,9 @@ function createDom(fiber) {
   return dom;
 }
 
-function reconcileChildren(fiber) {
-  if (!fiber.dom) {
-    fiber.dom = createDom(fiber);
-  }
+function reconcileChildren(fiber, elements) {
+  console.log("🍊", fiber, elements);
 
-  const elements = fiber.props.children;
   let index = 0;
   let prevSibling = null;
 
@@ -100,8 +97,29 @@ function reconcileChildren(fiber) {
   }
 }
 
+// 处理函数组件
+function updateFunctionComponent(fiber) {
+  const elements = [fiber.type(fiber.props)];
+  reconcileChildren(fiber, elements);
+}
+
+// 处理普通组件
+function updateHostComponent(fiber) {
+  if (!fiber.dom) {
+    fiber.dom = createDom(fiber);
+  }
+  const elements = fiber.props.children;
+  reconcileChildren(fiber, elements);
+}
+
 function performUnitOfWork(fiber) {
-  reconcileChildren(fiber);
+  // 判断是否为函数组件
+  const isFunctionComponent = fiber.type instanceof Function;
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber);
+  } else {
+    updateHostComponent(fiber);
+  }
 
   // 如果存在子元素，则返回子元素
   if (fiber.child) {
@@ -159,23 +177,35 @@ function updateDom(dom, prevProps, nextProps) {
     });
 }
 
+function commitDeletion(fiber, parentDom) {
+  if (fiber.dom) {
+    parentDom.removeChild(fiber.dom);
+  } else {
+    commitDeletion(fiber.child, parentDom);
+  }
+}
+
 function commitWork(fiber) {
+  console.log("🍎", fiber);
+
   if (!fiber) {
     return;
   }
-  console.log("🍎", fiber);
 
-  // if (fiber.parent) {
-  //   fiber.parent.dom.appendChild(fiber.dom);
-  // }
+  // 找到父级 dom
+  let domParentFiber = fiber.parent;
+  while (!domParentFiber.dom) {
+    domParentFiber = domParentFiber.parent;
+  }
 
-  const parentDom = fiber.parent.dom;
+  const parentDom = domParentFiber.dom;
+
   if (fiber.effectTag === "PLACEMENT" && fiber.dom) {
     parentDom.appendChild(fiber.dom);
   } else if (fiber.effectTag === "UPDATE" && fiber.dom) {
     updateDom(fiber.dom, fiber.alternate.props, fiber.props);
   } else if (fiber.effectTag === "DELETION") {
-    parentDom.removeChild(fiber.dom);
+    commitDeletion(fiber, parentDom);
   }
 
   commitWork(fiber.child);
@@ -193,6 +223,8 @@ function commitRoot() {
 function workLoop(deadline) {
   while (nextUnitOfWork && deadline.timeRemaining() > 1) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+
+    // fiber 链表遍历完成
     if (!nextUnitOfWork && wipRoot) {
       commitRoot();
     }
