@@ -10,7 +10,7 @@ let currentRoot = null;
 // 删除的 fiber
 let deletions = null;
 
-function render(element, container) {
+export function render(element, container) {
   wipRoot = {
     dom: container,
     props: {
@@ -36,8 +36,6 @@ function createDom(fiber) {
 }
 
 function reconcileChildren(fiber, elements) {
-  console.log("🍊", fiber, elements);
-
   let index = 0;
   let prevSibling = null;
 
@@ -99,6 +97,9 @@ function reconcileChildren(fiber, elements) {
 
 // 处理函数组件
 function updateFunctionComponent(fiber) {
+  wipFiber = fiber;
+  hookIndex = 0;
+  wipFiber.hooks = [];
   const elements = [fiber.type(fiber.props)];
   reconcileChildren(fiber, elements);
 }
@@ -110,6 +111,49 @@ function updateHostComponent(fiber) {
   }
   const elements = fiber.props.children;
   reconcileChildren(fiber, elements);
+}
+
+let hookIndex = null;
+let wipFiber = null;
+export function useState(initial) {
+  console.log("useState", hookIndex);
+  
+
+  // 检查是否有旧的 hook
+  const oldHook =
+    wipFiber.alternate &&
+    wipFiber.alternate.hooks &&
+    wipFiber.alternate.hooks[hookIndex];
+
+  console.log("oldHooks:", wipFiber?.alternate?.hooks, "hookIndex:", hookIndex);
+
+  const hook = {
+    state: oldHook ? oldHook.state : initial,
+    queue: [],
+  };
+
+  // 计算新的 state
+  const actions = oldHook ? oldHook.queue : [];
+  actions.forEach((action) => {
+    hook.state = typeof action === "function" ? action(hook.state) : action;
+  });
+
+  const setState = (action) => {
+    console.log("action", action);
+
+    hook.queue.push(action);
+    wipRoot = {
+      dom: currentRoot.dom,
+      props: currentRoot.props,
+      alternate: currentRoot,
+    };
+    nextUnitOfWork = wipRoot;
+    deletions = [];
+  };
+
+  wipFiber.hooks.push(hook);
+  hookIndex++;
+  return [hook.state, setState];
 }
 
 function performUnitOfWork(fiber) {
@@ -232,5 +276,3 @@ function workLoop(deadline) {
 
   requestIdleCallback(workLoop);
 }
-
-export default render;
